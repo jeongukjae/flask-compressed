@@ -58,11 +58,12 @@ class FlaskCompressed:
             return
 
         decompressed = request.get_data()
-        for encoding in encodings:
+        print(decompressed)
+        for encoding in reversed(encodings):
             decompressed = \
                 self._encoder_list[encoding].decompress(decompressed)
 
-        g.decompressed_body = decompressed
+        g.body = decompressed
 
     def _after_request(self, response):
         return response

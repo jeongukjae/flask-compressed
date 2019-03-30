@@ -15,6 +15,8 @@ class Compression:
 
 
 class Gzip(Compression):
+    _encoding_name = 'gzip'
+
     @staticmethod
     def compress(content, level=5):
         if not isinstance(content, bytes):
@@ -31,6 +33,8 @@ class Gzip(Compression):
 
 
 class Deflate(Compression):
+    _encoding_name = 'deflate'
+
     @staticmethod
     def compress(content):
         if not isinstance(content, bytes):
