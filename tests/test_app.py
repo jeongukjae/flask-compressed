@@ -1,6 +1,7 @@
 import gzip
 import zlib
 import json
+import pytest
 
 from flask import Flask, g
 from flask_compressed import FlaskCompressed, compress_as_gzip
@@ -53,6 +54,29 @@ def test_send_zlib():
             data=compressed_data,
             headers=dict({'Content-Encoding': 'deflate'}))
         assert response.data == original_data
+
+
+def test_set_unsupported_encodings():
+    flask_app = Flask(__name__)
+
+    with pytest.raises(ValueError):
+        FlaskCompressed(flask_app, encodings=('some-encoding'))
+
+
+def test_send_unsupported_encodings():
+    flask_app = Flask(__name__)
+    FlaskCompressed(flask_app)
+
+    @flask_app.route('/')
+    def echo():
+        return g.body
+
+    with flask_app.test_client() as client:
+        rv = client.post(
+            '/',
+            headers={'Content-Encoding': 'gzip, unsupported, deflate'},
+            data=b'some-data')
+        assert rv.status_code == 500
 
 
 def test_send_multiple():
