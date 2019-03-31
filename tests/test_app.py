@@ -1,9 +1,9 @@
 import gzip
 import zlib
+import json
 
 from flask import Flask, g
-
-from flask_compressed import FlaskCompressed
+from flask_compressed import FlaskCompressed, compress_as_gzip
 
 
 def test_flask_compressed():
@@ -73,3 +73,18 @@ def test_send_multiple():
             data=compressed_data,
             headers=dict({'Content-Encoding': 'deflate, gzip'}))
         assert response.data == original_data
+
+
+def test_response():
+    flask_app = Flask(__name__)
+    FlaskCompressed(flask_app)
+    messages = json.dumps({'message': 'hello'})
+
+    @flask_app.route('/')
+    @compress_as_gzip
+    def index():
+        return messages, 200
+
+    with flask_app.test_client() as client:
+        response = client.get('/')
+        assert messages.encode('utf8') == gzip.decompress(response.get_data())

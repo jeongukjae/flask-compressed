@@ -1,10 +1,57 @@
-from flask import Flask, request, g
+from functools import wraps
+from flask import Flask, request, g, make_response
 
 from .compression import Gzip, Deflate
 
 # TODO: support gzip, compress, deflate, identity, br
 COMPRESSIONS_LIST = (Gzip, Deflate)
 SUPPORTED_ENCODINGS = {comp._encoding_name: comp for comp in COMPRESSIONS_LIST}
+
+
+def compress(encodings):
+    def decorator(func):
+        @wraps(func)
+        def inner_function(*args, **kwargs):
+            response = make_response(func(*args, **kwargs))
+
+            if isinstance(encodings, str):
+                _encodings = [encodings]
+                response.headers['Content-Encoding'] = encodings
+            else:
+                _encodings = encodings
+                response.headers['Content-Encoding'] = ",".join(encodings)
+
+            compressed = response.get_data()
+            for encoding in _encodings:
+                if encoding not in SUPPORTED_ENCODINGS:
+                    raise ValueError(
+                        "%s is not supported encodings" % encoding)
+
+                compressed = SUPPORTED_ENCODINGS[encoding].compress(compressed)
+            response.set_data(compressed)
+            return response
+
+        return inner_function
+
+    return decorator
+
+
+def compress_as_gzip(func):
+    @wraps(func)
+    @compress('gzip')
+    def inner_function(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return inner_function
+
+
+def compress_as_deflate(func):
+    @wraps(func)
+    @compress('deflate')
+    def inner_function(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return inner_function
 
 
 class FlaskCompressed:
