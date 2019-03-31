@@ -12,7 +12,6 @@ def test_flask_compressed():
     FlaskCompressed(flask_app)
 
     # attached to flask app's hooks
-    assert len(flask_app.after_request_funcs) == 1
     assert len(flask_app.before_request_funcs) == 1
 
 

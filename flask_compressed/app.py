@@ -20,7 +20,6 @@ class FlaskCompressed:
         self.app = app
 
         self.app.before_request(self._before_request)
-        self.app.after_request(self._after_request)
 
         for encoding in self._encodings:
             if encoding not in SUPPORTED_ENCODINGS:
@@ -64,6 +63,3 @@ class FlaskCompressed:
                 self._encoder_list[encoding].decompress(decompressed)
 
         g.body = decompressed
-
-    def _after_request(self, response):
-        return response
